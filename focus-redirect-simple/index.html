@@ -82,20 +82,33 @@
 
     <script>
         function openApp() {
+            // Get all URL parameters (both query string and hash fragment)
             const urlParams = new URLSearchParams(window.location.search);
-            const accessToken = urlParams.get('access_token');
-            const refreshToken = urlParams.get('refresh_token');
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            
+            // Check both query params and hash params for tokens
+            const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
+            const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
+            const tokenType = urlParams.get('token_type') || hashParams.get('token_type');
+            const expiresIn = urlParams.get('expires_in') || hashParams.get('expires_in');
+            
+            console.log('Redirect page - URL params:', Object.fromEntries(urlParams));
+            console.log('Redirect page - Hash params:', Object.fromEntries(hashParams));
+            console.log('Redirect page - Found tokens:', { accessToken: !!accessToken, refreshToken: !!refreshToken });
             
             let appUrl = "focus://auth/callback";
             const params = [];
             
-            if (accessToken) params.push(`access_token=${accessToken}`);
-            if (refreshToken) params.push(`refresh_token=${refreshToken}`);
+            if (accessToken) params.push(`access_token=${encodeURIComponent(accessToken)}`);
+            if (refreshToken) params.push(`refresh_token=${encodeURIComponent(refreshToken)}`);
+            if (tokenType) params.push(`token_type=${encodeURIComponent(tokenType)}`);
+            if (expiresIn) params.push(`expires_in=${encodeURIComponent(expiresIn)}`);
             
             if (params.length > 0) {
                 appUrl += "?" + params.join("&");
             }
             
+            console.log('Redirect page - Opening app with URL:', appUrl);
             window.location.href = appUrl;
         }
 
@@ -103,6 +116,11 @@
         setTimeout(() => {
             openApp();
         }, 2000);
+        
+        // Also log current URL for debugging
+        console.log('Redirect page - Current URL:', window.location.href);
+        console.log('Redirect page - Search params:', window.location.search);
+        console.log('Redirect page - Hash:', window.location.hash);
     </script>
 </body>
 </html>
