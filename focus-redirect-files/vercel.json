@@ -1,0 +1,17 @@
+{
+  "functions": {
+    "api/auth/callback.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/auth/callback",
+      "destination": "/api/auth/callback"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
+    }
+  ]
+}
