@@ -28,12 +28,6 @@
         .success-icon {
             font-size: 60px;
             margin-bottom: 20px;
-            animation: bounce 2s infinite;
-        }
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
         }
         h1 { 
             margin-bottom: 10px; 
@@ -60,25 +54,11 @@
         }
         .btn:hover { 
             background: #2563eb; 
-            transform: translateY(-2px);
         }
         .fallback { 
             margin-top: 30px; 
             font-size: 14px; 
             opacity: 0.7; 
-        }
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-            margin-right: 10px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -88,69 +68,59 @@
         <h1>Email Confirmed!</h1>
         <p>Your Focus account has been successfully verified.</p>
         
-        <div id="status">
-            <div class="loading"></div>
-            Opening Focus App...
-        </div>
+        <a href="focus://auth/callback" class="btn" onclick="openApp(); return false;">
+            Open Focus App
+        </a>
         
-        <div id="manual-open" style="display: none;">
-            <a href="focus://auth/callback" class="btn" onclick="openApp()">
-                Open Focus App
+        <div class="fallback">
+            <p>App not opening automatically?</p>
+            <a href="https://play.google.com/store/apps/details?id=com.focus.focus" class="btn">
+                Get Focus App
             </a>
-            
-            <div class="fallback">
-                <p>App not opening? Try:</p>
-                <a href="https://play.google.com/store/apps/details?id=com.focus.focus" class="btn">
-                    Download from Play Store
-                </a>
-            </div>
         </div>
     </div>
 
     <script>
         function openApp() {
-            // Extract URL parameters
+            // Get all URL parameters (both query string and hash fragment)
             const urlParams = new URLSearchParams(window.location.search);
-            const accessToken = urlParams.get('access_token');
-            const refreshToken = urlParams.get('refresh_token');
-            const tokenType = urlParams.get('token_type');
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
             
-            // Build app URL with parameters
+            // Check both query params and hash params for tokens
+            const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
+            const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
+            const tokenType = urlParams.get('token_type') || hashParams.get('token_type');
+            const expiresIn = urlParams.get('expires_in') || hashParams.get('expires_in');
+            
+            console.log('Redirect page - URL params:', Object.fromEntries(urlParams));
+            console.log('Redirect page - Hash params:', Object.fromEntries(hashParams));
+            console.log('Redirect page - Found tokens:', { accessToken: !!accessToken, refreshToken: !!refreshToken });
+            
             let appUrl = "focus://auth/callback";
             const params = [];
             
-            if (accessToken) params.push(`access_token=${accessToken}`);
-            if (refreshToken) params.push(`refresh_token=${refreshToken}`);
-            if (tokenType) params.push(`token_type=${tokenType}`);
+            if (accessToken) params.push(`access_token=${encodeURIComponent(accessToken)}`);
+            if (refreshToken) params.push(`refresh_token=${encodeURIComponent(refreshToken)}`);
+            if (tokenType) params.push(`token_type=${encodeURIComponent(tokenType)}`);
+            if (expiresIn) params.push(`expires_in=${encodeURIComponent(expiresIn)}`);
             
             if (params.length > 0) {
                 appUrl += "?" + params.join("&");
             }
             
-            console.log("Opening app with URL:", appUrl);
-            
-            // Try to open the app
+            console.log('Redirect page - Opening app with URL:', appUrl);
             window.location.href = appUrl;
-            
-            return false;
         }
 
-        // Auto-try to open app on page load
-        window.onload = function() {
-            console.log("Page loaded, attempting to open app...");
-            console.log("Current URL:", window.location.href);
-            
-            // Try to open app after 1 second
-            setTimeout(() => {
-                openApp();
-            }, 1000);
-            
-            // Show manual option after 5 seconds
-            setTimeout(() => {
-                document.getElementById('status').style.display = 'none';
-                document.getElementById('manual-open').style.display = 'block';
-            }, 5000);
-        };
+        // Auto-open app after 2 seconds
+        setTimeout(() => {
+            openApp();
+        }, 2000);
+        
+        // Also log current URL for debugging
+        console.log('Redirect page - Current URL:', window.location.href);
+        console.log('Redirect page - Search params:', window.location.search);
+        console.log('Redirect page - Hash:', window.location.hash);
     </script>
 </body>
 </html>
